@@ -232,6 +232,20 @@
     .consent p:last-child { margin-bottom: 0; }
 
     /* ── States ── */
+    .refresh-btn {
+      margin-top: 10px;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #6B7280;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: auto;
+    }
+    .refresh-btn:hover { background: #f0fdf4; border-color: #2D7D0A; color: #2D7D0A; }
+
     .date-tabs {
       max-width: 560px;
       margin: 0 auto 20px;
@@ -311,18 +325,24 @@
   }
 
   // ── Load session from Apps Script ─────────────────────────────────────────
-  async function loadSession() {
+  async function loadSession(silent = false) {
     try {
+      if (!silent) document.getElementById('app').innerHTML = '<div class="loading-state">Loading courts...</div>';
       const res  = await fetch(`${APPS_SCRIPT_URL}?action=session`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Could not load session');
       session = data.session;
       render();
     } catch (err) {
-      document.getElementById('app').innerHTML =
-        `<div class="error-state">❌ Could not load court info.<br><small>${err.message}</small></div>`;
+      if (!silent) {
+        document.getElementById('app').innerHTML =
+          `<div class="error-state">❌ Could not load court info.<br><small>${err.message}</small></div>`;
+      }
     }
   }
+
+  // ── Auto-refresh every 5 minutes ──────────────────────────────────────────
+  setInterval(() => loadSession(true), 5 * 60 * 1000);
 
   // ── Format date ───────────────────────────────────────────────────────────
   function formatDate(dateStr) {
@@ -358,6 +378,7 @@
         <h1>🥒 Hell's Kitchen Pickleball</h1>
         <div class="subtitle">Court spots available — confirm yours below</div>
         ${dates.length === 1 ? `<div class="date-badge">${formatDate(selectedDate)}</div>` : ''}
+        <button class="refresh-btn" onclick="loadSession(true)">↻ Refresh</button>
       </div>
       ${dateTabs}
 
