@@ -425,7 +425,7 @@
       if (isMyConfirm) {
         actionHtml = `
           <div class="confirmed-msg">✅ You're confirmed!</div>
-          <div class="confirmed-sub">Check your phone for your invite link.</div>
+          <div class="confirmed-sub">Check your phone or email for your invite link.</div>
         `;
       } else if (isFull) {
         actionHtml = `<button class="confirm-btn" disabled>Court Full</button>`;
@@ -523,17 +523,13 @@
       confirmedEventId = eventId;
 
       // Show correct message based on delivery channel
-      const channel = data.deliveryChannel === 'sms'
-        ? 'Check your phone for the invite link.'
-        : 'Check your email for the invite link.';
+      showToast(`✅ Confirmed! Check your phone or email for the invite link.`, 5000);
 
       // Optimistically update local session
       const court = session.courts.find(c => c.eventId === eventId);
       if (court && !court.confirmed.some(a => a.email === attendeeEmail)) {
         court.confirmed.push({ name: data.name || 'You', email: attendeeEmail });
       }
-
-      showToast(`✅ Confirmed! ${channel}`, 5000);
       render();
 
     } catch (err) {
