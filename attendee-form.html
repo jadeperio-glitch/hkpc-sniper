@@ -232,43 +232,6 @@
     .consent p:last-child { margin-bottom: 0; }
 
     /* ── States ── */
-    .refresh-btn {
-      margin-top: 10px;
-      background: none;
-      border: 1px solid rgba(255,255,255,0.3);
-      color: #6B7280;
-      font-size: 12px;
-      padding: 4px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-      width: auto;
-    }
-    .refresh-btn:hover { background: #f0fdf4; border-color: #2D7D0A; color: #2D7D0A; }
-
-    .date-tabs {
-      max-width: 560px;
-      margin: 0 auto 20px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .date-tab {
-      flex: 1;
-      padding: 10px 14px;
-      background: white;
-      border: 2px solid #E5E7EB;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #6B7280;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .date-tab:hover { border-color: #2D7D0A; color: #2D7D0A; }
-    .date-tab.active { background: #2D7D0A; border-color: #2D7D0A; color: white; }
-
     .loading-state, .error-state {
       max-width: 400px;
       margin: 60px auto;
@@ -325,24 +288,18 @@
   }
 
   // ── Load session from Apps Script ─────────────────────────────────────────
-  async function loadSession(silent = false) {
+  async function loadSession() {
     try {
-      if (!silent) document.getElementById('app').innerHTML = '<div class="loading-state">Loading courts...</div>';
       const res  = await fetch(`${APPS_SCRIPT_URL}?action=session`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Could not load session');
       session = data.session;
       render();
     } catch (err) {
-      if (!silent) {
-        document.getElementById('app').innerHTML =
-          `<div class="error-state">❌ Could not load court info.<br><small>${err.message}</small></div>`;
-      }
+      document.getElementById('app').innerHTML =
+        `<div class="error-state">❌ Could not load court info.<br><small>${err.message}</small></div>`;
     }
   }
-
-  // ── Auto-refresh every 5 minutes ──────────────────────────────────────────
-  setInterval(() => loadSession(true), 5 * 60 * 1000);
 
   // ── Format date ───────────────────────────────────────────────────────────
   function formatDate(dateStr) {
@@ -350,37 +307,20 @@
     return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
-  let selectedDate = null;
-
   // ── Render ────────────────────────────────────────────────────────────────
   function render() {
     const app = document.getElementById('app');
     if (!session) { app.innerHTML = '<div class="loading-state">Loading...</div>'; return; }
 
-    const dates  = session.dates || (session.date ? [session.date] : []);
-    if (!selectedDate || !dates.includes(selectedDate)) selectedDate = dates[0];
-    const courts = session.courts.filter(c => c.date === selectedDate);
-
-    // Date tabs if multiple nights
-    let dateTabs = '';
-    if (dates.length > 1) {
-      dateTabs = `<div class="date-tabs">` +
-        dates.map(d => `
-          <button class="date-tab${d === selectedDate ? ' active' : ''}" onclick="selectDate('${d}')">
-            ${formatDate(d)}
-          </button>`
-        ).join('') +
-        `</div>`;
-    }
+    const dateStr = formatDate(session.date);
+    const courts  = session.courts;
 
     let html = `
       <div class="header">
         <h1>🥒 Hell's Kitchen Pickleball</h1>
         <div class="subtitle">Court spots available — confirm yours below</div>
-        ${dates.length === 1 ? `<div class="date-badge">${formatDate(selectedDate)}</div>` : ''}
-        <button class="refresh-btn" onclick="loadSession(true)">↻ Refresh</button>
+        <div class="date-badge">${dateStr}</div>
       </div>
-      ${dateTabs}
 
       <div class="email-gate" id="emailGate" style="display:${attendeeEmail ? 'none' : 'block'}">
         <h2>Enter your email to confirm a spot</h2>
@@ -395,29 +335,24 @@
     `;
 
     courts.forEach(court => {
-      const selfConfirmed = court.selfConfirmed || [];
-      const spotsLeft    = court.maxSpots - court.confirmed.length - selfConfirmed.length;
+      const spotsLeft    = court.maxSpots - court.confirmed.length;
       const isFull       = spotsLeft <= 0;
       const isMyConfirm  = confirmedEventId === court.eventId;
       const timeStr      = court.startTime + (court.endTime ? '–' + court.endTime : '');
 
       let badgeClass = 'open';
       let badgeText  = `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left`;
-      if (isFull)            { badgeClass = 'full'; badgeText = 'Full'; }
+      if (isFull)       { badgeClass = 'full'; badgeText = 'Full'; }
       else if (spotsLeft === 1) { badgeClass = 'low'; }
 
-      // Build player chips — owner first, then PodPlay confirmed, then self-confirmed (email sent), then empty slots
+      // Build player chips — owner first, then confirmed, then empty slots
       let chipsHtml = '';
+      // Owner chip
       chipsHtml += `<span class="player-chip owner">🎯 ${court.sniper}</span>`;
-      // PodPlay accepted
+      // Confirmed attendees
       court.confirmed.forEach(p => {
         const isYou = attendeeEmail && p.email && p.email.toLowerCase() === attendeeEmail.toLowerCase();
         chipsHtml += `<span class="player-chip${isYou ? ' you' : ''}">${p.name}${isYou ? ' (you)' : ''}</span>`;
-      });
-      // Self-confirmed (email sent, not yet accepted in PodPlay)
-      selfConfirmed.forEach(p => {
-        const isYou = attendeeEmail && p.email && p.email.toLowerCase() === attendeeEmail.toLowerCase();
-        chipsHtml += `<span class="player-chip${isYou ? ' you' : ''}" title="Invite sent">${p.name}${isYou ? ' (you)' : ''} ✉️</span>`;
       });
       // Empty slots
       for (let i = 0; i < spotsLeft; i++) {
@@ -430,7 +365,7 @@
       if (isMyConfirm) {
         actionHtml = `
           <div class="confirmed-msg">✅ You're confirmed!</div>
-          <div class="confirmed-sub">Check your phone or email for your invite link.</div>
+          <div class="confirmed-sub">Check your phone for your invite link.</div>
         `;
       } else if (isFull) {
         actionHtml = `<button class="confirm-btn" disabled>Court Full</button>`;
@@ -485,12 +420,6 @@
     }
   }
 
-  // ── Select date ───────────────────────────────────────────────────────────
-  function selectDate(date) {
-    selectedDate = date;
-    render();
-  }
-
   // ── Submit email ──────────────────────────────────────────────────────────
   function submitEmail() {
     const input = document.getElementById('emailInput');
@@ -528,13 +457,17 @@
       confirmedEventId = eventId;
 
       // Show correct message based on delivery channel
-      showToast(`✅ Confirmed! Check your phone or email for the invite link.`, 5000);
+      const channel = data.deliveryChannel === 'sms'
+        ? 'Check your phone for the invite link.'
+        : 'Check your email for the invite link.';
 
       // Optimistically update local session
       const court = session.courts.find(c => c.eventId === eventId);
       if (court && !court.confirmed.some(a => a.email === attendeeEmail)) {
         court.confirmed.push({ name: data.name || 'You', email: attendeeEmail });
       }
+
+      showToast(`✅ Confirmed! ${channel}`, 5000);
       render();
 
     } catch (err) {
