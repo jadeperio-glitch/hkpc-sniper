@@ -249,21 +249,19 @@
 
     try {
       const encrypted = await encryptData({ name, phone, email, password }, ENCRYPTION_PASS);
+      const fileName  = `sniper-${name.replace(/\s+/g, '-').toLowerCase()}.enc`;
 
       status.textContent = '📤 Uploading securely to Google Drive...';
 
-      const res = await fetch(APPS_SCRIPT_URL, {
-  method:  'POST',
-  mode:    'no-cors',
-  body:    JSON.stringify({
-          fileName: `sniper-${name.replace(/\s+/g, '-').toLowerCase()}.enc`,
-          data:     encrypted,
-        }),
-        headers: { 'Content-Type': 'application/json' },
+      // Use no-cors mode to work around CORS restrictions with Apps Script
+      await fetch(APPS_SCRIPT_URL, {
+        method:  'POST',
+        mode:    'no-cors',
+        body:    JSON.stringify({ fileName, data: encrypted }),
+        headers: { 'Content-Type': 'text/plain' },
       });
 
-      // no-cors mode returns opaque response — assume success if no exception thrown
-
+      // With no-cors we can't read the response, but if no error was thrown it worked
       status.className   = 'status success';
       status.textContent = `✅ Done, ${name}! Your credentials are securely stored. You're registered as a sniper and will receive a text confirmation when courts are booked.`;
       document.getElementById('password').value = '';
