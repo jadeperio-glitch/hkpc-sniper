@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HKPC — Join the Crew</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1a0f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1a2e1a;
+      border-radius: 16px;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.4);
+      max-width: 480px;
+      width: 100%;
+      overflow: hidden;
+      border: 1px solid #2d4a2d;
+    }
+
+    .header {
+      padding: 32px 32px 24px;
+      border-bottom: 1px solid #2d4a2d;
+    }
+
+    .header .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #4ade80;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #f0fdf4;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: #6b9e6b;
+      line-height: 1.6;
+    }
+
+    .body { padding: 28px 32px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4ade80;
+      margin-bottom: 7px;
+    }
+
+    .label-hint {
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #4a7a4a;
+      margin-left: 6px;
+    }
+
+    input[type=text], input[type=email], input[type=tel] {
+      width: 100%;
+      padding: 11px 14px;
+      background: #0f1a0f;
+      border: 1.5px solid #2d4a2d;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #f0fdf4;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #4ade80; }
+    input::placeholder { color: #3a5a3a; }
+
+    .consent-box {
+      background: #0f1a0f;
+      border: 1px solid #2d4a2d;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .consent-box h3 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4ade80;
+      margin-bottom: 10px;
+    }
+    .consent-box p {
+      font-size: 12px;
+      color: #6b9e6b;
+      line-height: 1.65;
+      margin-bottom: 8px;
+    }
+    .consent-box p:last-child { margin-bottom: 0; }
+
+    .agree-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .agree-row input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: #4ade80;
+    }
+    .agree-row label {
+      font-size: 12.5px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #6b9e6b;
+      line-height: 1.55;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #2D7D0A;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:hover:not(:disabled) { background: #236008; transform: translateY(-1px); }
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { background: #2d4a2d; color: #4a7a4a; cursor: not-allowed; }
+
+    .status {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      line-height: 1.5;
+    }
+    .status.success {
+      background: #052e16;
+      border: 1px solid #166534;
+      color: #4ade80;
+      display: block;
+    }
+    .status.error {
+      background: #2d0a0a;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      display: block;
+    }
+    .status.loading {
+      background: #0f1a0f;
+      border: 1px solid #2d4a2d;
+      color: #6b9e6b;
+      display: block;
+    }
+
+    .footer {
+      padding: 14px 32px;
+      border-top: 1px solid #2d4a2d;
+      font-size: 11px;
+      color: #3a5a3a;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="eyebrow">🥒 Hell's Kitchen Pickleball Club</div>
+    <h1>Fill out this Form to Automate</h1>
+    <p>Register once to get court invites sent straight to your phone (and email as a backup). We book courts weekly — you'll get notified of availability and you can reserve your spot. Once reserved, you'll receive an invitation by SMS (and email as backup). Once you accept, your spot will be confirmed in PodPlay.</p>
+  </div>
+
+  <div class="body">
+    <div class="form-group">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" placeholder="e.g. Billy Barlow" autocomplete="name">
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email Address <span class="label-hint">your HKPC / PodPlay email</span></label>
+      <input type="email" id="email" placeholder="e.g. billy@gmail.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="phone">Cell Phone <span class="label-hint">for court invite texts</span></label>
+      <input type="tel" id="phone" placeholder="e.g. 212-555-1234" autocomplete="tel">
+    </div>
+
+    <div class="consent-box">
+      <h3>📱 SMS Consent</h3>
+      <p>By registering, you agree to receive SMS messages from HKPC with court invite links when a spot is available for you. Message frequency varies — typically once per week on booking nights.</p>
+      <p>Message and data rates may apply. Reply <strong style="color:#4ade80">STOP</strong> at any time to opt out. Reply <strong style="color:#4ade80">HELP</strong> for help.</p>
+      <p>Your contact info is used exclusively for HKPC court invites and will never be shared or sold to third parties or affiliates for marketing purposes. No mobile data will be shared with third parties.</p>
+    </div>
+
+    <div class="agree-row">
+      <input type="checkbox" id="agree">
+      <label for="agree">I agree to receive SMS court invite messages from HKPC. I understand I can reply STOP at any time to opt out.</label>
+    </div>
+
+    <button id="submitBtn" disabled onclick="submitRegistration()">Register for Court Invites</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="footer">
+    Private booking group · Hell's Kitchen Pickleball Club · Not affiliated with PodPlay
+  </div>
+</div>
+
+<script>
+  // ── Config ────────────────────────────────────────────────────────────────
+  // IMPORTANT: Replace with your deployed apps-script-invite.js URL
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbDNaskbL_oweJFuP2NZwjG-TzZF_Knw-fV1GmXw-YzYgTvYPkuvwbLsrtqVh4JKngHQ/exec';
+
+  // ── Form validation ───────────────────────────────────────────────────────
+  const fieldIds  = ['name', 'email', 'phone'];
+  const agreeBox  = document.getElementById('agree');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function checkReady() {
+    const allFilled = fieldIds.every(id => document.getElementById(id).value.trim());
+    submitBtn.disabled = !(allFilled && agreeBox.checked);
+  }
+  fieldIds.forEach(id => document.getElementById(id).addEventListener('input', checkReady));
+  agreeBox.addEventListener('change', checkReady);
+
+  function normalizePhone(phone) {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+    return `+${digits}`;
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  async function submitRegistration() {
+    const name   = document.getElementById('name').value.trim();
+    const email  = document.getElementById('email').value.trim().toLowerCase();
+    const phone  = normalizePhone(document.getElementById('phone').value.trim());
+    const status = document.getElementById('status');
+
+    submitBtn.disabled   = true;
+    status.className     = 'status loading';
+    status.textContent   = '📋 Registering you...';
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method:  'POST',
+        mode:    'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify({ action: 'register', name, email, phone }),
+      });
+
+      // no-cors — can't read response, assume success if no throw
+      status.className = 'status success';
+      status.textContent = `✅ You're registered, ${name.split(' ')[0]}! You'll get a text when a court spot opens up for you. 🥒`;
+      document.getElementById('name').value  = '';
+      document.getElementById('email').value = '';
+      document.getElementById('phone').value = '';
+      agreeBox.checked = false;
+      submitBtn.disabled = true;
+
+    } catch (err) {
+      status.className   = 'status error';
+      status.textContent = `❌ Something went wrong: ${err.message}. Please try again or contact the organizer.`;
+      submitBtn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
