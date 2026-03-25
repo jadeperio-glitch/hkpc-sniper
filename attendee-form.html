@@ -232,6 +232,29 @@
     .consent p:last-child { margin-bottom: 0; }
 
     /* ── States ── */
+    .date-tabs {
+      max-width: 560px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .date-tab {
+      flex: 1;
+      padding: 10px 14px;
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6B7280;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .date-tab:hover { border-color: #2D7D0A; color: #2D7D0A; }
+    .date-tab.active { background: #2D7D0A; border-color: #2D7D0A; color: white; }
+
     .loading-state, .error-state {
       max-width: 400px;
       margin: 60px auto;
@@ -307,20 +330,36 @@
     return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
+  let selectedDate = null;
+
   // ── Render ────────────────────────────────────────────────────────────────
   function render() {
     const app = document.getElementById('app');
     if (!session) { app.innerHTML = '<div class="loading-state">Loading...</div>'; return; }
 
-    const dateStr = formatDate(session.date);
-    const courts  = session.courts;
+    const dates  = session.dates || (session.date ? [session.date] : []);
+    if (!selectedDate || !dates.includes(selectedDate)) selectedDate = dates[0];
+    const courts = session.courts.filter(c => c.date === selectedDate);
+
+    // Date tabs if multiple nights
+    let dateTabs = '';
+    if (dates.length > 1) {
+      dateTabs = `<div class="date-tabs">` +
+        dates.map(d => `
+          <button class="date-tab${d === selectedDate ? ' active' : ''}" onclick="selectDate('${d}')">
+            ${formatDate(d)}
+          </button>`
+        ).join('') +
+        `</div>`;
+    }
 
     let html = `
       <div class="header">
         <h1>🥒 Hell's Kitchen Pickleball</h1>
         <div class="subtitle">Court spots available — confirm yours below</div>
-        <div class="date-badge">${dateStr}</div>
+        ${dates.length === 1 ? `<div class="date-badge">${formatDate(selectedDate)}</div>` : ''}
       </div>
+      ${dateTabs}
 
       <div class="email-gate" id="emailGate" style="display:${attendeeEmail ? 'none' : 'block'}">
         <h2>Enter your email to confirm a spot</h2>
@@ -418,6 +457,12 @@
       emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEmail(); });
       emailBtn.disabled = true;
     }
+  }
+
+  // ── Select date ───────────────────────────────────────────────────────────
+  function selectDate(date) {
+    selectedDate = date;
+    render();
   }
 
   // ── Submit email ──────────────────────────────────────────────────────────
