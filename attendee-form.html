@@ -395,24 +395,29 @@
     `;
 
     courts.forEach(court => {
-      const spotsLeft    = court.maxSpots - court.confirmed.length;
+      const selfConfirmed = court.selfConfirmed || [];
+      const spotsLeft    = court.maxSpots - court.confirmed.length - selfConfirmed.length;
       const isFull       = spotsLeft <= 0;
       const isMyConfirm  = confirmedEventId === court.eventId;
       const timeStr      = court.startTime + (court.endTime ? '–' + court.endTime : '');
 
       let badgeClass = 'open';
       let badgeText  = `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left`;
-      if (isFull)       { badgeClass = 'full'; badgeText = 'Full'; }
+      if (isFull)            { badgeClass = 'full'; badgeText = 'Full'; }
       else if (spotsLeft === 1) { badgeClass = 'low'; }
 
-      // Build player chips — owner first, then confirmed, then empty slots
+      // Build player chips — owner first, then PodPlay confirmed, then self-confirmed (email sent), then empty slots
       let chipsHtml = '';
-      // Owner chip
       chipsHtml += `<span class="player-chip owner">🎯 ${court.sniper}</span>`;
-      // Confirmed attendees
+      // PodPlay accepted
       court.confirmed.forEach(p => {
         const isYou = attendeeEmail && p.email && p.email.toLowerCase() === attendeeEmail.toLowerCase();
         chipsHtml += `<span class="player-chip${isYou ? ' you' : ''}">${p.name}${isYou ? ' (you)' : ''}</span>`;
+      });
+      // Self-confirmed (email sent, not yet accepted in PodPlay)
+      selfConfirmed.forEach(p => {
+        const isYou = attendeeEmail && p.email && p.email.toLowerCase() === attendeeEmail.toLowerCase();
+        chipsHtml += `<span class="player-chip${isYou ? ' you' : ''}" title="Invite sent">${p.name}${isYou ? ' (you)' : ''} ✉️</span>`;
       });
       // Empty slots
       for (let i = 0; i < spotsLeft; i++) {
