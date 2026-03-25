@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HKPC — Confirm Your Spot</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0fdf4;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    .header {
+      max-width: 560px;
+      margin: 0 auto 24px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #14532d;
+      margin-bottom: 4px;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      color: #6B7280;
+    }
+    .header .date-badge {
+      display: inline-block;
+      margin-top: 10px;
+      background: #2D7D0A;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+    }
+
+    /* ── Email gate ── */
+    .email-gate {
+      max-width: 400px;
+      margin: 0 auto 28px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 24px;
+    }
+    .email-gate h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .email-row {
+      display: flex;
+      gap: 8px;
+    }
+    .email-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 7px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .email-row input:focus { border-color: #2D7D0A; }
+    .email-row button {
+      padding: 10px 18px;
+      background: #2D7D0A;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .email-row button:hover { background: #236008; }
+    .email-row button:disabled { background: #9CA3AF; cursor: not-allowed; }
+    .email-hint {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-top: 8px;
+    }
+
+    /* ── Courts grid ── */
+    .courts {
+      max-width: 560px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .court-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .court-card:not(.full):not(.confirmed-card) { cursor: pointer; }
+    .court-card:not(.full):not(.confirmed-card):hover { box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+
+    .court-card.full { opacity: 0.6; }
+    .court-card.confirmed-card { border: 2px solid #2D7D0A; }
+
+    .court-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid #F3F4F6;
+    }
+    .court-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .court-time {
+      font-size: 13px;
+      color: #6B7280;
+      margin-top: 2px;
+    }
+    .spots-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .spots-badge.open   { background: #DCFCE7; color: #166534; }
+    .spots-badge.low    { background: #FEF3C7; color: #92400E; }
+    .spots-badge.full   { background: #FEE2E2; color: #991B1B; }
+
+    .court-body { padding: 12px 20px 16px; }
+
+    .players-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9CA3AF;
+      margin-bottom: 8px;
+    }
+    .player-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .player-chip {
+      font-size: 12px;
+      background: #F3F4F6;
+      color: #374151;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    .player-chip.owner {
+      background: #DCFCE7;
+      color: #166534;
+    }
+    .player-chip.you {
+      background: #2D7D0A;
+      color: white;
+    }
+    .player-chip.empty {
+      background: #F9FAFB;
+      color: #D1D5DB;
+      border: 1px dashed #E5E7EB;
+    }
+
+    .confirm-btn {
+      width: 100%;
+      padding: 11px;
+      background: #2D7D0A;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .confirm-btn:hover:not(:disabled) { background: #236008; }
+    .confirm-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+    .confirm-btn.loading { background: #6B7280; }
+
+    .confirmed-msg {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #166534;
+      padding: 8px 0 2px;
+    }
+    .confirmed-sub {
+      text-align: center;
+      font-size: 12px;
+      color: #6B7280;
+      margin-top: 2px;
+    }
+
+    /* ── Consent section ── */
+    .consent {
+      max-width: 560px;
+      margin: 28px auto 0;
+      background: #EFF6FF;
+      border-left: 3px solid #0284C7;
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+    .consent h3 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #0284C7;
+      margin-bottom: 8px;
+    }
+    .consent p {
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    .consent p:last-child { margin-bottom: 0; }
+
+    /* ── States ── */
+    .loading-state, .error-state {
+      max-width: 400px;
+      margin: 60px auto;
+      text-align: center;
+      color: #6B7280;
+      font-size: 15px;
+    }
+    .error-state { color: #991B1B; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111827;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading-state">Loading courts...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Config ────────────────────────────────────────────────────────────────
+  // IMPORTANT: Replace with your deployed apps-script-invite.js URL
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbDNaskbL_oweJFuP2NZwjG-TzZF_Knw-fV1GmXw-YzYgTvYPkuvwbLsrtqVh4JKngHQ/exec';
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let session       = null;
+  let attendeeEmail = null;
+  let confirmedEventId = null;
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  function showToast(msg, duration = 3000) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), duration);
+  }
+
+  // ── Load session from Apps Script ─────────────────────────────────────────
+  async function loadSession() {
+    try {
+      const res  = await fetch(`${APPS_SCRIPT_URL}?action=session`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Could not load session');
+      session = data.session;
+      render();
+    } catch (err) {
+      document.getElementById('app').innerHTML =
+        `<div class="error-state">❌ Could not load court info.<br><small>${err.message}</small></div>`;
+    }
+  }
+
+  // ── Format date ───────────────────────────────────────────────────────────
+  function formatDate(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function render() {
+    const app = document.getElementById('app');
+    if (!session) { app.innerHTML = '<div class="loading-state">Loading...</div>'; return; }
+
+    const dateStr = formatDate(session.date);
+    const courts  = session.courts;
+
+    let html = `
+      <div class="header">
+        <h1>🥒 Hell's Kitchen Pickleball</h1>
+        <div class="subtitle">Court spots available — confirm yours below</div>
+        <div class="date-badge">${dateStr}</div>
+      </div>
+
+      <div class="email-gate" id="emailGate" style="display:${attendeeEmail ? 'none' : 'block'}">
+        <h2>Enter your email to confirm a spot</h2>
+        <div class="email-row">
+          <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="email">
+          <button id="emailBtn" onclick="submitEmail()">Go</button>
+        </div>
+        <div class="email-hint">Use the email you registered with HKPC. Text STOP to opt out of SMS notifications.</div>
+      </div>
+
+      <div class="courts">
+    `;
+
+    courts.forEach(court => {
+      const spotsLeft    = court.maxSpots - court.confirmed.length;
+      const isFull       = spotsLeft <= 0;
+      const isMyConfirm  = confirmedEventId === court.eventId;
+      const timeStr      = court.startTime + (court.endTime ? '–' + court.endTime : '');
+
+      let badgeClass = 'open';
+      let badgeText  = `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left`;
+      if (isFull)       { badgeClass = 'full'; badgeText = 'Full'; }
+      else if (spotsLeft === 1) { badgeClass = 'low'; }
+
+      // Build player chips — owner first, then confirmed, then empty slots
+      let chipsHtml = '';
+      // Owner chip
+      chipsHtml += `<span class="player-chip owner">🎯 ${court.sniper}</span>`;
+      // Confirmed attendees
+      court.confirmed.forEach(p => {
+        const isYou = attendeeEmail && p.email && p.email.toLowerCase() === attendeeEmail.toLowerCase();
+        chipsHtml += `<span class="player-chip${isYou ? ' you' : ''}">${p.name}${isYou ? ' (you)' : ''}</span>`;
+      });
+      // Empty slots
+      for (let i = 0; i < spotsLeft; i++) {
+        chipsHtml += `<span class="player-chip empty">Open</span>`;
+      }
+
+      const cardClass = isFull ? 'court-card full' : isMyConfirm ? 'court-card confirmed-card' : 'court-card';
+
+      let actionHtml = '';
+      if (isMyConfirm) {
+        actionHtml = `
+          <div class="confirmed-msg">✅ You're confirmed!</div>
+          <div class="confirmed-sub">Check your phone for your invite link.</div>
+        `;
+      } else if (isFull) {
+        actionHtml = `<button class="confirm-btn" disabled>Court Full</button>`;
+      } else {
+        const disabled = !attendeeEmail || confirmedEventId ? 'disabled' : '';
+        actionHtml = `<button class="confirm-btn" ${disabled} onclick="confirmSpot('${court.eventId}', this)">
+          ${!attendeeEmail ? 'Enter your email above first' : confirmedEventId ? 'Already confirmed' : 'Confirm My Spot'}
+        </button>`;
+      }
+
+      html += `
+        <div class="${cardClass}">
+          <div class="court-header">
+            <div>
+              <div class="court-name">${court.court}</div>
+              <div class="court-time">${timeStr}</div>
+            </div>
+            <span class="spots-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div class="court-body">
+            <div class="players-label">Players</div>
+            <div class="player-list">${chipsHtml}</div>
+            ${actionHtml}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+
+    // Consent / SMS disclaimer
+    html += `
+      <div class="consent">
+        <h3>📱 SMS Notifications</h3>
+        <p>By confirming a spot, you consent to receive a one-time SMS with your court invite link. Message and data rates may apply.</p>
+        <p>Reply <strong>STOP</strong> to opt out at any time. This is a private booking tool used by a small group of friends. Not affiliated with PodPlay Technologies or Hell's Kitchen Pickleball Club.</p>
+        <p>Your contact information is used exclusively to send court invites and will never be shared or sold to third parties.</p>
+      </div>
+    `;
+
+    app.innerHTML = html;
+
+    // Re-attach email input listener
+    const emailInput = document.getElementById('emailInput');
+    const emailBtn   = document.getElementById('emailBtn');
+    if (emailInput) {
+      emailInput.addEventListener('input', () => {
+        emailBtn.disabled = !emailInput.value.includes('@');
+      });
+      emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEmail(); });
+      emailBtn.disabled = true;
+    }
+  }
+
+  // ── Submit email ──────────────────────────────────────────────────────────
+  function submitEmail() {
+    const input = document.getElementById('emailInput');
+    const email = input?.value?.trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    attendeeEmail = email;
+    render();
+  }
+
+  // ── Confirm spot ──────────────────────────────────────────────────────────
+  async function confirmSpot(eventId, btn) {
+    if (!attendeeEmail) { showToast('Please enter your email first'); return; }
+    if (confirmedEventId) { showToast('You have already confirmed a court tonight'); return; }
+
+    btn.disabled  = true;
+    btn.classList.add('loading');
+    btn.textContent = 'Confirming...';
+
+    try {
+      const res  = await fetch(APPS_SCRIPT_URL, {
+        method:  'POST',
+        mode:    'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify({ action: 'confirm', email: attendeeEmail, eventId }),
+      });
+
+      // no-cors means we can't read the response body — assume success if no throw
+      confirmedEventId = eventId;
+
+      // Optimistically update local session data
+      const court = session.courts.find(c => c.eventId === eventId);
+      if (court && !court.confirmed.some(a => a.email === attendeeEmail)) {
+        court.confirmed.push({ name: 'You', email: attendeeEmail });
+      }
+
+      showToast('✅ Confirmed! Check your phone for the invite link.', 5000);
+      render();
+
+    } catch (err) {
+      btn.disabled  = false;
+      btn.classList.remove('loading');
+      btn.textContent = 'Confirm My Spot';
+      showToast(`❌ Something went wrong. Please try again.`);
+    }
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  loadSession();
+</script>
+</body>
+</html>
