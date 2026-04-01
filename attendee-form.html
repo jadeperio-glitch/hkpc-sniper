@@ -40,6 +40,31 @@
       border-radius: 20px;
     }
 
+    /* ── Date tabs ── */
+    .date-tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .date-tab {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid #2D7D0A;
+      background: white;
+      color: #2D7D0A;
+      transition: all 0.15s;
+    }
+    .date-tab:hover { background: #f0fdf4; }
+    .date-tab.active {
+      background: #2D7D0A;
+      color: white;
+    }
+
     /* ── Email gate ── */
     .email-gate {
       max-width: 400px;
@@ -275,9 +300,10 @@
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbDNaskbL_oweJFuP2NZwjG-TzZF_Knw-fV1GmXw-YzYgTvYPkuvwbLsrtqVh4JKngHQ/exec';
 
   // ── State ─────────────────────────────────────────────────────────────────
-  let session       = null;
-  let attendeeEmail = null;
+  let session          = null;
+  let attendeeEmail    = null;
   let confirmedEventId = null;
+  let selectedDate     = null;  // which night's courts are shown
 
   // ── Toast ─────────────────────────────────────────────────────────────────
   function showToast(msg, duration = 3000) {
@@ -308,22 +334,44 @@
     return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
+  // ── Select a date tab ────────────────────────────────────────────────────
+  function selectDate(date) {
+    selectedDate = date;
+    render();
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   function render() {
     const app = document.getElementById('app');
     if (!session) { app.innerHTML = '<div class="loading-state">Loading...</div>'; return; }
 
-    const courts  = session.courts;
+    const allCourts = session.courts;
     // Support both old session.date (string) and new session.dates (array)
-    const dates   = session.dates || (session.date ? [session.date] : [...new Set(courts.map(c => c.date))]);
-    const dateStr = dates.map(formatDate).join(' & ');
-    const multiDay = dates.length > 1;
+    const dates     = session.dates || (session.date ? [session.date] : [...new Set(allCourts.map(c => c.date))]);
+    const multiDay  = dates.length > 1;
+
+    // Auto-select first date if none selected yet
+    if (!selectedDate || !dates.includes(selectedDate)) selectedDate = dates[0];
+
+    // Filter courts to the selected date
+    const courts = multiDay ? allCourts.filter(c => c.date === selectedDate) : allCourts;
+
+    // Build date tabs HTML (only shown when multiple nights)
+    const tabsHtml = multiDay ? `
+      <div class="date-tabs">
+        ${dates.map(d => `
+          <button class="date-tab${d === selectedDate ? ' active' : ''}" onclick="selectDate('${d}')">
+            ${new Date(...d.split('-').map((v,i) => i===1 ? +v-1 : +v)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </button>
+        `).join('')}
+      </div>
+    ` : `<div class="date-badge">${formatDate(selectedDate)}</div>`;
 
     let html = `
       <div class="header">
         <h1>🥒 Hell's Kitchen Pickleball</h1>
         <div class="subtitle">Court spots available — confirm yours below</div>
-        <div class="date-badge">${dateStr}</div>
+        ${tabsHtml}
       </div>
 
       <div class="email-gate" id="emailGate" style="display:${attendeeEmail ? 'none' : 'block'}">
@@ -339,26 +387,23 @@
     `;
 
     courts.forEach(court => {
-      const spotsLeft    = court.maxSpots - court.confirmed.length;
-      const isFull       = spotsLeft <= 0;
-      const isMyConfirm  = confirmedEventId === court.eventId;
-      const timeStr      = court.startTime + (court.endTime ? '–' + court.endTime : '');
+      const spotsLeft   = court.maxSpots - court.confirmed.length;
+      const isFull      = spotsLeft <= 0;
+      const isMyConfirm = confirmedEventId === court.eventId;
+      const timeStr     = court.startTime + (court.endTime ? '–' + court.endTime : '');
 
       let badgeClass = 'open';
       let badgeText  = `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left`;
-      if (isFull)       { badgeClass = 'full'; badgeText = 'Full'; }
+      if (isFull)            { badgeClass = 'full'; badgeText = 'Full'; }
       else if (spotsLeft === 1) { badgeClass = 'low'; }
 
       // Build player chips — owner first, then confirmed, then empty slots
       let chipsHtml = '';
-      // Owner chip
       chipsHtml += `<span class="player-chip owner">🎯 ${court.sniper}</span>`;
-      // Confirmed attendees
       court.confirmed.forEach(p => {
         const isYou = attendeeEmail && p.email && p.email.toLowerCase() === attendeeEmail.toLowerCase();
         chipsHtml += `<span class="player-chip${isYou ? ' you' : ''}">${p.name}${isYou ? ' (you)' : ''}</span>`;
       });
-      // Empty slots
       for (let i = 0; i < spotsLeft; i++) {
         chipsHtml += `<span class="player-chip empty">Open</span>`;
       }
@@ -385,7 +430,7 @@
           <div class="court-header">
             <div>
               <div class="court-name">${court.court}</div>
-              <div class="court-time">${multiDay ? formatDate(court.date) + ' · ' : ''}${timeStr}</div>
+              <div class="court-time">${timeStr}</div>
             </div>
             <span class="spots-badge ${badgeClass}">${badgeText}</span>
           </div>
