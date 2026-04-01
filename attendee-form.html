@@ -303,6 +303,7 @@
 
   // ── Format date ───────────────────────────────────────────────────────────
   function formatDate(dateStr) {
+    if (!dateStr) return 'TBD';
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
@@ -312,8 +313,11 @@
     const app = document.getElementById('app');
     if (!session) { app.innerHTML = '<div class="loading-state">Loading...</div>'; return; }
 
-    const dateStr = formatDate(session.date);
     const courts  = session.courts;
+    // Support both old session.date (string) and new session.dates (array)
+    const dates   = session.dates || (session.date ? [session.date] : [...new Set(courts.map(c => c.date))]);
+    const dateStr = dates.map(formatDate).join(' & ');
+    const multiDay = dates.length > 1;
 
     let html = `
       <div class="header">
@@ -381,7 +385,7 @@
           <div class="court-header">
             <div>
               <div class="court-name">${court.court}</div>
-              <div class="court-time">${timeStr}</div>
+              <div class="court-time">${multiDay ? formatDate(court.date) + ' · ' : ''}${timeStr}</div>
             </div>
             <span class="spots-badge ${badgeClass}">${badgeText}</span>
           </div>
