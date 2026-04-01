@@ -149,6 +149,7 @@
         <li>Your credentials are used <strong>exclusively to book pickleball courts</strong> at HKPC on your behalf at midnight on designated snipe dates.</li>
         <li>Your credentials are <strong>stored indefinitely</strong>. You may revoke access at any time by changing your PodPlay password.</li>
         <li>This is a <strong>private tool</strong> used by a small group of friends. It is not affiliated with PodPlay Technologies or Hell's Kitchen Pickleball Club.</li>
+        <li>By providing your phone number, you consent to receive <strong>SMS booking confirmations</strong> from HKPC Renegade after each court is successfully booked. Message frequency: approximately 1 message per booking event. Msg &amp; data rates may apply. Reply <strong>STOP</strong> to opt out at any time. Reply <strong>HELP</strong> for help. Your number will never be shared or sold to third parties.</li>
       </ol>
     </div>
 
@@ -158,7 +159,7 @@
     </div>
 
     <div class="form-group">
-      <label for="phone">Cell Phone Number <span class="label-hint">for booking confirmations</span></label>
+      <label for="phone">Cell Phone Number <span class="label-hint">for SMS booking confirmations</span></label>
       <input type="tel" id="phone" placeholder="e.g. 212-555-1234" autocomplete="off">
     </div>
 
@@ -174,7 +175,7 @@
 
     <div class="agree-row">
       <input type="checkbox" id="agree">
-      <label for="agree">I have read and agree to the confidentiality statement above. I authorize the sniper system to book courts on my behalf using these credentials.</label>
+      <label for="agree">I have read and agree to the confidentiality statement above. I authorize the system to book courts on my behalf using these credentials, and I consent to receive SMS booking confirmations from HKPC Renegade. Reply STOP to opt out at any time.</label>
     </div>
 
     <button id="submitBtn" disabled onclick="submitCredentials()">Submit Securely</button>
@@ -233,7 +234,7 @@
   // ── Upload to Google Drive via Apps Script ────────────────────────────────
   // IMPORTANT: Replace this URL with your deployed Google Apps Script URL
   // See README.txt for setup instructions
-  const APPS_SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbzCAvFHNz7dBtMjGbobGEqRDcp_0yv9s3z4AUtqa-LmwMsnQpJQu-fQy0NRKOs1xOfpGA/exec';
+  const APPS_SCRIPT_URL   = 'YOUR_APPS_SCRIPT_URL_HERE';
   const ENCRYPTION_PASS   = 'hkpc-sniper-2026-secret-key-32ch';
 
   async function submitCredentials() {
