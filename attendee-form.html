@@ -303,7 +303,8 @@
   let session          = null;
   let attendeeEmail    = null;
   let confirmedEventId = null;
-  let selectedDate     = null;  // which night's courts are shown
+  let selectedDate     = null;
+  let smsConsented     = false;  // must check consent box before confirming
 
   // ── Toast ─────────────────────────────────────────────────────────────────
   function showToast(msg, duration = 3000) {
@@ -332,6 +333,12 @@
     if (!dateStr) return 'TBD';
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  // ── Toggle SMS consent checkbox ──────────────────────────────────────────
+  function toggleConsent(checked) {
+    smsConsented = checked;
+    render();
   }
 
   // ── Select a date tab ────────────────────────────────────────────────────
@@ -419,9 +426,13 @@
       } else if (isFull) {
         actionHtml = `<button class="confirm-btn" disabled>Court Full</button>`;
       } else {
-        const disabled = !attendeeEmail || confirmedEventId ? 'disabled' : '';
+        const disabled = !attendeeEmail || !smsConsented || confirmedEventId ? 'disabled' : '';
+        const btnText  = !attendeeEmail ? 'Enter your email above first'
+                       : !smsConsented  ? 'Check the consent box below first'
+                       : confirmedEventId ? 'Already confirmed'
+                       : 'Confirm My Spot';
         actionHtml = `<button class="confirm-btn" ${disabled} onclick="confirmSpot('${court.eventId}', this)">
-          ${!attendeeEmail ? 'Enter your email above first' : confirmedEventId ? 'Already confirmed' : 'Confirm My Spot'}
+          ${btnText}
         </button>`;
       }
 
@@ -445,13 +456,18 @@
 
     html += `</div>`;
 
-    // Consent / SMS disclaimer
+    // Consent checkbox — required before any court can be confirmed
     html += `
       <div class="consent">
         <h3>📱 SMS Notifications</h3>
-        <p>By confirming a spot, you agree to receive a one-time SMS from HKPC Renegade with your court invite link. Message frequency: 1 message per court you confirm. Msg &amp; data rates may apply.</p>
-        <p>Reply <strong>STOP</strong> to opt out at any time. Reply <strong>HELP</strong> for help. This is a private booking tool used by a small group of friends. Not affiliated with PodPlay Technologies or Hell's Kitchen Pickleball Club.</p>
-        <p>Your contact information is used exclusively to send court invites and will never be shared or sold to third parties.</p>
+        <p>By confirming a spot, you will receive a one-time SMS from HKPC Renegade with your court invite link. Message frequency: 1 message per court you confirm. Msg &amp; data rates may apply. Reply <strong>STOP</strong> to opt out at any time. Reply <strong>HELP</strong> for help. Not affiliated with PodPlay Technologies or Hell's Kitchen Pickleball Club. Your contact info is never shared or sold.</p>
+        <div style="display:flex; align-items:flex-start; gap:10px; margin-top:14px;">
+          <input type="checkbox" id="smsConsentBox" ${smsConsented ? 'checked' : ''} onchange="toggleConsent(this.checked)"
+            style="width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:#2D7D0A; cursor:pointer;">
+          <label for="smsConsentBox" style="font-size:12.5px; color:#374151; line-height:1.55; cursor:pointer;">
+            By checking this box, I agree to receive informational text messages from HKPC Renegade. Consent is not a condition of purchase. Message frequency will vary. Msg &amp; data rates may apply. Reply STOP to opt out.
+          </label>
+        </div>
       </div>
     `;
 
