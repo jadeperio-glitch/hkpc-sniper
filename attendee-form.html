@@ -109,8 +109,9 @@
     .email-row button:hover { background: #236008; }
     .email-row button:disabled { background: #9CA3AF; cursor: not-allowed; }
     .email-hint {
-      font-size: 11px;
-      color: #9CA3AF;
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 1.5;
       margin-top: 8px;
     }
 
@@ -321,6 +322,12 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Could not load session');
       session = data.session;
+      // Handle empty session (no active bookings)
+      if (!session.courts || session.courts.length === 0) {
+        document.getElementById('app').innerHTML =
+          `<div class="loading-state">🥒 No courts booked yet — check back soon!</div>`;
+        return;
+      }
       render();
     } catch (err) {
       document.getElementById('app').innerHTML =
@@ -387,7 +394,7 @@
           <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="email">
           <button id="emailBtn" onclick="submitEmail()">Go</button>
         </div>
-        <div class="email-hint">Use the email you registered with HKPC.</div>
+        <div class="email-hint">Use the email you registered with HKPC. Upon confirmation, you will receive an SMS or email with the PodPlay reservation. Click through to finalize booking your spot.</div>
       </div>
 
       <div class="courts">
